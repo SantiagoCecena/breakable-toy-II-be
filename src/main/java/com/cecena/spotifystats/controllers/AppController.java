@@ -36,7 +36,7 @@ public class AppController {
 
     @GetMapping("/auth/spotify")
     public void login(HttpServletResponse response) throws IOException {
-        String state =generateRandomString(16);
+        String state = generateRandomString(16);
 
         Cookie stateCookie = new Cookie(stateKey, state);
         stateCookie.setHttpOnly(true);
@@ -65,7 +65,7 @@ public class AppController {
             @CookieValue(name = "spotify_auth_state", required = false) String storedState,
             HttpServletResponse response
     ) {
-        if( state == null || !state.equals(storedState)) {
+        if (state == null || !state.equals(storedState)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("State mismatch");
         }
         Cookie cookie = new Cookie(stateKey, null);
@@ -92,7 +92,7 @@ public class AppController {
                 tokenRequest,
                 Map.class
         );
-        if(!tokenResponse.getStatusCode().is2xxSuccessful()){
+        if (!tokenResponse.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error fetching the token");
         }
 
@@ -105,7 +105,7 @@ public class AppController {
         headers.setBearerAuth(accessToken);
         HttpEntity<?> profileRequest = new HttpEntity<>(headers);
         ResponseEntity<Map> profileResponse = restTemplate.exchange(
-                "https//api.spotify.com/v1/me",
+                "https://api.spotify.com/v1/me",
                 HttpMethod.GET,
                 profileRequest,
                 Map.class
@@ -149,12 +149,99 @@ public class AppController {
         }
     }
 
+    @GetMapping("/me/top/artists")
+    public ResponseEntity<?> getUserTopArtist(
+            @RequestParam("access_token") String accessToken
+    ) {
+        String type = "artists";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://api.spotify.com/v1/me/top/" + type,
+                HttpMethod.GET,
+                request,
+                Map.class
+        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("previous", response.getBody().get("previous"));
+        result.put("next", response.getBody().get("next"));
+        result.put("items", response.getBody().get("items"));
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/artists/{id}")
+    public ResponseEntity<?> getArtist(
+            @PathVariable String id,
+            @RequestParam("access_token") String accessToken
+    ) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://api.spotify.com/v1/artists/" + id,
+                HttpMethod.GET,
+                request,
+                Map.class
+        );
+
+        return ResponseEntity.ok(response.getBody());
+    }
+
+    @GetMapping("/albums/{id}")
+    public ResponseEntity<?> getAlbum(
+            @PathVariable String id,
+            @RequestParam("access_token") String accessToken
+    ) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://api.spotify.com/v1/albums/" + id,
+                HttpMethod.GET,
+                request,
+                Map.class
+        );
+        return ResponseEntity.ok(response.getBody());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> Search(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("q") String query
+    ) {
+        String accessToken = token.split("\\s")[1];
+        String types = "album,artist,track";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                "https://api.spotify.com/v1/search?q=" + query + "&type=" + types,
+                HttpMethod.GET,
+                request,
+                Map.class
+        );
+
+        return ResponseEntity.ok(response.getBody());
+    }
+
+
     private String generateRandomString(int length) {
         SecureRandom random = new SecureRandom();
         StringBuilder sb = new StringBuilder(length);
         String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-        for(int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             sb.append(characters.charAt(random.nextInt(characters.length())));
         }
 
