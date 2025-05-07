@@ -1,0 +1,9 @@
+# Gradle
+.gradle/
+build/
+
+# Java
+*.class
+
+# Mac
+.DS_Store
