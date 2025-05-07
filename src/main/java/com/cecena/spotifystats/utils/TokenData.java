@@ -1,12 +1,11 @@
 package com.cecena.spotifystats.utils;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@AllArgsConstructor
-@Getter @Setter
+
+@Getter
+@Setter
 public class TokenData {
     private String accessToken;
     private String refreshToken;
