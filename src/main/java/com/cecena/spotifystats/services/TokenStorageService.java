@@ -1,6 +1,5 @@
 package com.cecena.spotifystats.services;
 
-import com.cecena.spotifystats.utils.TokenData;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -8,21 +7,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class TokenStorageService {
-    private final Map<String, TokenData> tokenMap = new ConcurrentHashMap<>();
+    private final Map<String, String> tokenMap = new ConcurrentHashMap<>();
 
-    public void saveToken(String userId, TokenData tokenData) {
-        tokenMap.put(userId, tokenData);
+    public void saveToken(String accessToken, String refreshToken) {
+        tokenMap.put(accessToken, refreshToken);
     }
 
-    public TokenData getTokens(String userId) {
-        return tokenMap.get(userId);
+    public String getTokens(String accessToken) {
+        return tokenMap.get(accessToken);
     }
 
-    public void removeTokens(String userId) {
-        tokenMap.remove(userId);
+    public void removeTokens(String accessToken) {
+        tokenMap.remove(accessToken);
     }
 
-    public boolean hasTokens(String userId) {
-        return tokenMap.containsKey(userId);
+    public boolean hasTokens(String accessToken) {
+        return tokenMap.containsKey(accessToken);
     }
 }
