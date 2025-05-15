@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/spotify")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:8080", "http://localhost:4173", "http://localhost:3000"})
 public class AppController {
 
     private SpotifyService spotifyService;
