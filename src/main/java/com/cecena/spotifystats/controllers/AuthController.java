@@ -1,7 +1,6 @@
 package com.cecena.spotifystats.controllers;
 
 import com.cecena.spotifystats.services.TokenStorageService;
-import com.cecena.spotifystats.utils.TokenData;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,24 +101,16 @@ public class AuthController {
 
         String accessToken = (String) tokenResponse.getBody().get("access_token");
         String refreshToken = (String) tokenResponse.getBody().get("refresh_token");
-        Integer expiresIn = (Integer) tokenResponse.getBody().get("expires_in");
 
-        // Get user spotify id
-        headers.clear();
-        headers.setBearerAuth(accessToken);
-        HttpEntity<?> profileRequest = new HttpEntity<>(headers);
-        ResponseEntity<Map> profileResponse = restTemplate.exchange(
-                "https://api.spotify.com/v1/me",
-                HttpMethod.GET,
-                profileRequest,
-                Map.class
-        );
+        tokenStorageService.saveToken(accessToken, refreshToken);
+        String redirectUri = UriComponentsBuilder.fromUriString("http://localhost:5173/")
+                .queryParam("access_token", accessToken)
+                .build()
+                .toUriString();
 
-        String userId = (String) profileResponse.getBody().get("id");
-
-        tokenStorageService.saveToken(userId, new TokenData(accessToken, refreshToken, expiresIn));
-
-        return ResponseEntity.ok(Map.of("access_token", accessToken));
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header(HttpHeaders.LOCATION, redirectUri)
+                .build();
     }
 
     @GetMapping("/refresh_token")
