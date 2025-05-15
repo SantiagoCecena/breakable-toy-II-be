@@ -31,11 +31,15 @@ public class AuthController {
     private String redirectUri;
     private final String stateKey = "spotify_auth_state";
 
-    @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
     private TokenStorageService tokenStorageService;
+
+    public AuthController(RestTemplate restTemplate, TokenStorageService tokenStorageService){
+        this.restTemplate = restTemplate;
+        this.tokenStorageService = tokenStorageService;
+
+    }
 
     @GetMapping("/spotify")
     public void login(HttpServletResponse response) throws IOException {
@@ -103,7 +107,7 @@ public class AuthController {
         String refreshToken = (String) tokenResponse.getBody().get("refresh_token");
 
         tokenStorageService.saveToken(accessToken, refreshToken);
-        String redirectUri = UriComponentsBuilder.fromUriString("http://localhost:5173/")
+        String redirectUri = UriComponentsBuilder.fromUriString("http://localhost:3000/")
                 .queryParam("access_token", accessToken)
                 .build()
                 .toUriString();
