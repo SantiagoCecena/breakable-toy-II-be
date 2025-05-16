@@ -1,17 +1,22 @@
 package com.cecena.spotifystats.controllers;
 
+import com.cecena.spotifystats.services.AuthService;
 import com.cecena.spotifystats.services.TokenStorageService;
 import jakarta.servlet.http.Cookie;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,9 +41,16 @@ public class AuthControllerTest {
 
     @Test
     void login_shouldRedirectToSpotify() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/auth/spotify"))
+        MvcResult result = mockMvc.perform(get("/api/auth/spotify"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("accounts.spotify.com")));
+                .andReturn();
+
+        String redirectUrl = result.getResponse().getRedirectedUrl();
+        Cookie stateCookie = result.getResponse().getCookie("spotify_auth_state");
+
+        MatcherAssert.assertThat(redirectUrl, Matchers.containsString("accounts.spotify.com"));
+        assert stateCookie != null;
+        MatcherAssert.assertThat(redirectUrl, Matchers.containsString("state=" + stateCookie.getValue()));
     }
 
     @Test
@@ -81,7 +93,6 @@ public class AuthControllerTest {
                         .param("code", code)
                         .param("state", state)
                         .cookie(new Cookie("spotify_auth_state", storedState))
-                ).andExpect(status().isOk())
-                .andExpect(jsonPath("$.access_token").value(accessToken));
+                ).andExpect(status().is3xxRedirection());
     }
 }
